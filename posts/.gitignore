@@ -1,6 +1,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/django,venv,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=django,venv,visualstudiocode
-
+.idea/
+.venv/
+db.sqlite3
 ### Django ###
 *.log
 *.pot
