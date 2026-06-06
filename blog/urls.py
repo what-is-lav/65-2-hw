@@ -18,10 +18,12 @@ from django.contrib import admin
 from django.urls import path
 from posts.views import hello_world
 from posts.views import about
+from posts import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", hello_world, name="home"),
     path("about/", about, name="about"),
+    path('categories/', views.active_categories_list, name='categories-list'),
 
 ]
