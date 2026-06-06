@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ post.title }}</title>
+</head>
+<body>
+    <a href="{% url 'post-list' %}">⬅ Вернуться к списку</a>
+    <h1>{{ post.title }}</h1>
+    <p><strong>Рейтинг:</strong> {{ post.rate }}</p>
+    <hr>
+    <div>
+        {{ post.content|linebreaks }}
+    </div>
+</body>
+</html>

@@ -25,5 +25,7 @@ urlpatterns = [
     path("", hello_world, name="home"),
     path("about/", about, name="about"),
     path('categories/', views.active_categories_list, name='categories-list'),
+    path('posts/', views.PostListView.as_view(), name='post-list'),
+    path('posts/<int:pk>/', views.PostDetailView.as_view(), name='post-detail'),
 
 ]
