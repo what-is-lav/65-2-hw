@@ -53,6 +53,7 @@ def my_posts(request):
     posts = Post.objects.filter(user=request.user)
     context = {'posts': posts}
     return render(request, 'posts/my_posts.html', context)
+
 def post_edit(request, pk):
     if not request.user.is_authenticated:
         return redirect('post_list')
