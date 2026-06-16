@@ -46,6 +46,43 @@ def post_create(request):
     context = {'form': form}
     return render(request, 'posts/create_post.html', context)
 
+def my_posts(request):
+    if not request.user.is_authenticated:
+        return redirect('post_list')
+
+    posts = Post.objects.filter(user=request.user)
+    context = {'posts': posts}
+    return render(request, 'posts/my_posts.html', context)
+def post_edit(request, pk):
+    if not request.user.is_authenticated:
+        return redirect('post_list')
+
+    post = Post.objects.filter(pk=pk).first()
+    
+    if not post or post.user != request.user:
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES, instance=post)
+        if form.is_valid():
+            form.save()
+            return redirect('my_posts')
+    else:
+        form = PostForm(instance=post)
+        
+    context = {'form': form, 'post': post}
+    return render(request, 'posts/post_edit.html', context)
+
+def post_delete(request, pk):
+    if not request.user.is_authenticated:
+        return redirect('post_list')
+    
+    post = get_object_or_404(Post, pk=pk, user=request.user)
+    if request.method == 'POST':
+        post.delete()
+        return redirect('my_posts')
+    return render(request, 'posts/delete_post.html', {'post': post})
+
 def category_create(request):
     if request.method == 'POST':
         form = CategoryForm(request.POST)
@@ -105,40 +142,3 @@ def login_user(request):
 def logout_user(request):
     logout(request)
     return redirect('post_list')
-
-def my_posts(request):
-    if not request.user.is_authenticated:
-        return redirect('post_list')
-
-    posts = Post.objects.filter(user=request.user)
-    context = {'posts': posts}
-    return render(request, 'posts/my_posts.html', context)
-
-def post_edit(request, pk):
-    if not request.user.is_authenticated:
-        return redirect('post_list')
-
-    post = Post.objects.filter(pk=pk).first()
-    
-    if not post or post.user != request.user:
-        raise PermissionDenied
-
-    if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES, instance=post)
-        if form.is_valid():
-            form.save()
-            return redirect('my_posts')
-    else:
-        form = PostForm(instance=post)
-        
-    context = {'form': form, 'post': post}
-    return render(request, 'posts/post_edit.html', context)
-
-def post_delete(request, pk):
-    if not request.user.is_authenticated:
-        return redirect('post_list')
-    post = get_object_or_404(Post, pk=pk, user=request.user)
-    if request.method == 'POST':
-        post.delete()
-        return redirect('my_posts')
-    return render(request, 'posts/delete_post.html', {'post': post})
