@@ -22,10 +22,17 @@ from posts import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", hello_world, name="home"),
-    path("about/", about, name="about"),
+    path('', views.list_view, name='post_list'),
+    path('about/', views.about, name='about'),
     path('categories/', views.active_categories_list, name='categories-list'),
-    path('posts/', views.PostListView.as_view(), name='post-list'),
-    path('posts/<int:pk>/', views.PostDetailView.as_view(), name='post-detail'),
-
+    path('posts/', views.list_view, name='post_list'),
+    path('posts/<int:pk>/', views.detail_view, name='post-detail'),
+    path('posts/create/', views.post_create, name='post_create'),
+    path('categories/create/', views.category_create, name='category_create'),
+    path('register/', views.register_user, name='register'),
+    path('login/', views.login_user, name='login'),
+    path('logout/', views.logout_user, name='logout'),
+    path('my-posts/', views.my_posts, name='my_posts'),
+    path('posts/<int:pk>/edit/', views.post_edit, name='post_edit'),
+    path('posts/<int:pk>/delete/', views.post_delete, name='post_delete'),
 ]

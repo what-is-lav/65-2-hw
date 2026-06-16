@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block title %}О проекте{% endblock %}
+
+{% block content %}
+    <h2>О проекте</h2>
+    <p style="font-size: 16px; line-height: 1.6;">Платформа для публикации постов и управления категориями.</p>
+    <hr>
+    <a href="{% url 'post_list' %}" class="btn btn-secondary">На главную</a>
+{% endblock %}

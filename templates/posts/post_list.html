@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Лента постов{% endblock %}
+
+{% block content %}
+    <h2>Доступные категории</h2>
+    <ul>
+        {% for category in categories %}
+            <li><strong>{{ category.title }}</strong> {% if category.description %}— {{ category.description }}{% endif %}</li>
+        {% empty %}
+            <li>Категорий пока нет</li>
+        {% endfor %}
+    </ul>
+
+    <hr>
+
+    <h2>Все посты</h2>
+    {% for post in posts %}
+        <div class="post-card">
+            <h3><a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a></h3>
+            <p class="post-category">{{ post.category.title|default:"Без категории" }}</p>
+        </div>
+    {% empty %}
+        <p>Постов пока нет</p>
+    {% endfor %}
+{% endblock %}

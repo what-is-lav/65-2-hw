@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход на сайт{% endblock %}
+
+{% block content %}
+    <div style="max-width: 400px; margin: 0 auto; padding: 20px 0;">
+        <h2 style="text-align: center; margin-bottom: 30px;">Вход на сайт</h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div style="background: #fee; color: #e74c3c; padding: 10px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            {{ form.as_p }}
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <button type="submit" class="btn btn-success" style="width: 100%;">Войти</button>
+            </div>
+        </form>
+        <p style="text-align: center; margin-top: 20px; font-size: 14px;">
+            Нет аккаунта? <a href="{% url 'register' %}" style="color: #3498db; text-decoration: none; font-weight: bold;">Зарегистрироваться</a>
+        </p>
+    </div>
+{% endblock %}
