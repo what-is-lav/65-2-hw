@@ -85,6 +85,9 @@ def post_delete(request, pk):
     return render(request, 'posts/delete_post.html', {'post': post})
 
 def category_create(request):
+    if not request.user.is_authenticated:
+        return redirect('post_list')
+        
     if request.method == 'POST':
         form = CategoryForm(request.POST)
         if form.is_valid():
@@ -92,9 +95,8 @@ def category_create(request):
             return redirect('post_create')
     else:
         form = CategoryForm()
-    context = {'form': form}
-    return render(request, 'categories/create_category.html', context)
-
+        
+    return render(request, 'categories/create_category.html', {'form': form})
 
 def category_delete(request, pk):
     if not request.user.is_authenticated:
