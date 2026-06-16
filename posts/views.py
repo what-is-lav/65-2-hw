@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http.response import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.db.utils import IntegrityError
 from django.contrib.auth.models import User
@@ -55,6 +56,16 @@ def category_create(request):
         form = CategoryForm()
     context = {'form': form}
     return render(request, 'categories/create_category.html', context)
+
+
+def category_delete(request, pk):
+    if not request.user.is_authenticated:
+        return redirect('categories-list')
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        category.delete()
+        return redirect('categories-list')
+    return render(request, 'categories/category_delete.html', {'category': category})
 
 def register_user(request):
     form = UserForm()
@@ -126,15 +137,8 @@ def post_edit(request, pk):
 def post_delete(request, pk):
     if not request.user.is_authenticated:
         return redirect('post_list')
-
-    post = Post.objects.filter(pk=pk).first()
-
-    if not post or post.user != request.user:
-        raise PermissionDenied
-
+    post = get_object_or_404(Post, pk=pk, user=request.user)
     if request.method == 'POST':
         post.delete()
         return redirect('my_posts')
-        
-    context = {'post': post}
-    return render(request, 'posts/post_delete.html', context)
+    return render(request, 'posts/delete_post.html', {'post': post})
