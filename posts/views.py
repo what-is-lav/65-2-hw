@@ -1,147 +1,104 @@
-from django.shortcuts import render, redirect
-from django.http.response import HttpResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
-from django.db.utils import IntegrityError
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth import login
 from django.contrib.auth.models import User
-from django.core.exceptions import PermissionDenied
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, FormView
 from .models import Category, Post
 from .forms import PostForm, CategoryForm, UserForm, LoginForm
 
-def hello_world(request):
-    return HttpResponse("<h1>HellO world</h1>")
+class AboutView(TemplateView):
+    template_name = "about.html"
 
-def about(request):
-    return render(request, "about.html")
+class PostListView(ListView):
+    model = Post
+    template_name = 'posts/post_list.html'
+    context_object_name = 'posts'
+    paginate_by = 5
 
-def active_categories_list(request):
-    categories = Category.objects.filter(is_active=True)
-    context = {'categories': categories}
-    return render(request, 'categories/categories_list.html', context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Category.objects.filter(is_active=True)
+        return context
 
-def list_view(request):
-    posts = Post.objects.all()
-    categories = Category.objects.filter(is_active=True) 
-    context = {'posts': posts, 'categories': categories}
-    return render(request, 'posts/post_list.html', context)
+class PostDetailView(DetailView):
+    model = Post
+    template_name = 'posts/post_detail.html'
+    context_object_name = 'post'
 
-def detail_view(request, pk):
-    post = Post.objects.filter(pk=pk).first()
-    context = {'post': post}
-    return render(request, 'posts/post_detail.html', context)
+class PostCreateView(LoginRequiredMixin, CreateView):
+    model = Post
+    form_class = PostForm
+    template_name = 'posts/create_post.html'
+    success_url = reverse_lazy('post_list')
 
-def post_create(request):
-    if not request.user.is_authenticated:
-        return redirect('post_list')
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
 
-    if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.user = request.user
-            post.save()
-            return redirect('post_list')
-    else:
-        form = PostForm()
-    context = {'form': form}
-    return render(request, 'posts/create_post.html', context)
+class MyPostsView(LoginRequiredMixin, ListView):
+    model = Post
+    template_name = 'posts/my_posts.html'
+    context_object_name = 'posts'
+    paginate_by = 5
 
-def my_posts(request):
-    if not request.user.is_authenticated:
-        return redirect('post_list')
+    def get_queryset(self):
+        return Post.objects.filter(user=self.request.user)
 
-    posts = Post.objects.filter(user=request.user)
-    context = {'posts': posts}
-    return render(request, 'posts/my_posts.html', context)
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Post
+    form_class = PostForm
+    template_name = 'posts/post_edit.html'
+    success_url = reverse_lazy('my_posts')
 
-def post_edit(request, pk):
-    if not request.user.is_authenticated:
-        return redirect('post_list')
+    def test_func(self):
+        return self.get_object().user == self.request.user
 
-    post = Post.objects.filter(pk=pk).first()
-    
-    if not post or post.user != request.user:
-        raise PermissionDenied
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Post
+    template_name = 'posts/delete_post.html'
+    success_url = reverse_lazy('my_posts')
 
-    if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES, instance=post)
-        if form.is_valid():
-            form.save()
-            return redirect('my_posts')
-    else:
-        form = PostForm(instance=post)
-        
-    context = {'form': form, 'post': post}
-    return render(request, 'posts/post_edit.html', context)
+    def test_func(self):
+        return self.get_object().user == self.request.user
 
-def post_delete(request, pk):
-    if not request.user.is_authenticated:
-        return redirect('post_list')
-    
-    post = get_object_or_404(Post, pk=pk, user=request.user)
-    if request.method == 'POST':
-        post.delete()
-        return redirect('my_posts')
-    return render(request, 'posts/delete_post.html', {'post': post})
+class CategoryCreateView(LoginRequiredMixin, CreateView):
+    model = Category
+    form_class = CategoryForm
+    template_name = 'categories/create_category.html'
+    success_url = reverse_lazy('post_create')
 
-def category_create(request):
-    if not request.user.is_authenticated:
-        return redirect('post_list')
-        
-    if request.method == 'POST':
-        form = CategoryForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('post_create')
-    else:
-        form = CategoryForm()
-        
-    return render(request, 'categories/create_category.html', {'form': form})
+class CategoryDeleteView(LoginRequiredMixin, DeleteView):
+    model = Category
+    template_name = 'categories/category_delete.html'
+    success_url = reverse_lazy('categories-list')
 
-def category_delete(request, pk):
-    if not request.user.is_authenticated:
-        return redirect('categories-list')
-    category = get_object_or_404(Category, pk=pk)
-    if request.method == 'POST':
-        category.delete()
-        return redirect('categories-list')
-    return render(request, 'categories/category_delete.html', {'category': category})
+class RegisterView(FormView):
+    form_class = UserForm
+    template_name = "register/registration.html"
+    success_url = reverse_lazy('post_list')
 
-def register_user(request):
-    form = UserForm()
-    if request.method == "POST":
-        form = UserForm(request.POST)
-        try:
-            if form.is_valid():
-                email = form.cleaned_data["email"]
-                user = User(username=email, email=email)
-                raw_password = form.cleaned_data["password"]
-                user.set_password(raw_password)
-                user.save()
-                login(request, user)
-                return redirect("post_list")
-        except IntegrityError:
-            form.add_error("email", "Пользователь с таким email уже существует!")
-            
-    return render(request, "register/registration.html", context={"form": form})
+    def form_valid(self, form):
+        username = form.cleaned_data["username"]
+        email = form.cleaned_data.get("email", "")
+        password = form.cleaned_data["password"]
+        user = User.objects.create_user(username=username, email=email, password=password)
+        login(self.request, user)
+        return super().form_valid(form)
 
-def login_user(request):
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('post_list')
-            else:
-                form.add_error(None, "Неверный логин или пароль")
-    else:
-        form = LoginForm()
-    
-    return render(request, "register/login.html", context={"form": form})
+class LoginUserView(LoginView):
+    form_class = LoginForm
+    template_name = "register/login.html"
+    next_page = 'post_list'
 
-def logout_user(request):
-    logout(request)
-    return redirect('post_list')
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.pop('request', None)
+        return kwargs
+
+    def form_invalid(self, form):
+        form.add_error(None, "Неверный логин или пароль")
+        return super().form_invalid(form)
+
+class LogoutUserView(LogoutView):
+    next_page = 'post_list'

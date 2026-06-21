@@ -20,10 +20,10 @@ class PostForm(forms.ModelForm):
     
 
 class UserForm(forms.Form):
-    email = forms.EmailField(label="Email")
+    username = forms.CharField(label="Логин", max_length=150)
+    email = forms.EmailField(label="Email (необязательно)", required=False)
     password = forms.CharField(widget=forms.PasswordInput, label="Пароль")
 
-
 class LoginForm(forms.Form):
-    username = forms.CharField(label="Логин (Email)")
+    username = forms.CharField(label="Логин")
     password = forms.CharField(widget=forms.PasswordInput, label="Пароль")
